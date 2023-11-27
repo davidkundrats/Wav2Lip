@@ -1,3 +1,4 @@
+import os
 from os.path import dirname, join, basename, isfile
 from tqdm import tqdm
 
@@ -44,7 +45,7 @@ class Dataset(object):
     def get_window(self, start_frame):
         start_id = self.get_frame_id(start_frame)
         vidname = dirname(start_frame)
-
+        
         window_fnames = []
         for frame_id in range(start_id, start_id + syncnet_T):
             frame = join(vidname, '{}.jpg'.format(frame_id))
@@ -70,8 +71,8 @@ class Dataset(object):
         while 1:
             idx = random.randint(0, len(self.all_videos) - 1)
             vidname = self.all_videos[idx]
-
-            img_names = list(glob(join(vidname, '*.jpg')))
+            img_names = list(glob(os.path.join(vidname, '*.jpg')))
+            
             if len(img_names) <= 3 * syncnet_T:
                 continue
             img_name = random.choice(img_names)
@@ -173,8 +174,11 @@ def train(device, model, train_data_loader, test_data_loader, optimizer,
             if global_step % hparams.syncnet_eval_interval == 0:
                 with torch.no_grad():
                     eval_model(test_data_loader, global_step, device, model, checkpoint_dir)
-
+            
             prog_bar.set_description('Loss: {}'.format(running_loss / (step + 1)))
+
+        if (running_loss / (step + 1)) <= .7: 
+            break
 
         global_epoch += 1
 
@@ -255,7 +259,7 @@ if __name__ == "__main__":
 
     train_data_loader = data_utils.DataLoader(
         train_dataset, batch_size=hparams.syncnet_batch_size, shuffle=True,
-        num_workers=hparams.num_workers)
+        num_workers=12)
 
     test_data_loader = data_utils.DataLoader(
         test_dataset, batch_size=hparams.syncnet_batch_size,

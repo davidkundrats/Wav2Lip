@@ -9,7 +9,7 @@ def get_image_list(data_root, split):
 			line = line.strip()
 			if ' ' in line: line = line.split()[0]
 			filelist.append(os.path.join(data_root, line))
-
+	
 	return filelist
 
 class HParams:
