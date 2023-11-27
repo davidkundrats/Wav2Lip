@@ -38,7 +38,7 @@ def detect(net, img, device):
         FB, FC, FH, FW = ocls.size()  # feature map size
         stride = 2**(i + 2)    # 4,8,16,32,64,128
         anchor = stride * 4
-        poss = zip(*np.where(ocls[:, 1, :, :] > 0.05))
+        poss = zip(*np.where(ocls[:, 1, :, :] > 0.02))
         for Iindex, hindex, windex in poss:
             axc, ayc = stride / 2 + windex * stride, stride / 2 + hindex * stride
             score = ocls[0, 1, hindex, windex]
