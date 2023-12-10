@@ -1,0 +1,1 @@
+from .batch_face_detector import BFD as FaceDetector

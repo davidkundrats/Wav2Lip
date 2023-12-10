@@ -6,6 +6,7 @@ from tqdm import tqdm
 from glob import glob
 import torch, face_detection
 from models import Wav2Lip
+from face_detection.detection.batch_face import FaceDetector
 import platform
 
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -66,27 +67,27 @@ def get_smoothened_boxes(boxes, T):
 	return boxes
 
 def face_detect(images):
-	detector = face_detection.FaceAlignment(face_detection.LandmarksType._2D, 
-											flip_input=False, device=device)
-
+	#detector = face_detection.FaceAlignment(face_detection.LandmarksType._2D, 
+	#										flip_input=False, device=device)
+	detector = FaceDetector(device, verbose=True)
 	batch_size = args.face_det_batch_size
 	
-	while 1:
-		predictions = []
-		try:
-			for i in tqdm(range(0, len(images), batch_size)):
-				predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
-		except RuntimeError:
-			if batch_size == 1: 
-				raise RuntimeError('Image too big to run face detection on GPU. Please use the --resize_factor argument')
-			batch_size //= 2
-			print('Recovering from OOM error; New batch size: {}'.format(batch_size))
-			continue
-		break
+	# while 1:
+	# 	predictions = []
+	# 	try:
+	# 		for i in tqdm(range(0, len(images), batch_size)):
+	# 			predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
+	# 	except RuntimeError:
+	# 		if batch_size == 1: 
+	# 			raise RuntimeError('Image too big to run face detection on GPU. Please use the --resize_factor argument')
+	# 		batch_size //= 2
+	# 		print('Recovering from OOM error; New batch size: {}'.format(batch_size))
+	# 		continue
+	# 	break
 
 	results = []
 	pady1, pady2, padx1, padx2 = args.pads
-	for rect, image in zip(predictions, images):
+	for image, rect in zip(images, detector.face_rect(images)):
 		if rect is None:
 			cv2.imwrite('temp/faulty_frame.jpg', image) # check this frame where the face was not detected.
 			raise ValueError('Face not detected! Ensure the video contains a face in all the frames.')
